@@ -1,6 +1,5 @@
 import React from "react";
 import styled from "styled-components";
-
 import sideLine from '../../images/side-line.svg'
 
 const PageTitleWrapper = styled.div`
@@ -16,8 +15,8 @@ const SideLine = styled.img`
     margin-right: 78px;
 `
 
-// font-family: PT Sans;
 const TitleText = styled.h1`
+    font-family: PT Sans;
     font-size: 56px;
     font-weight: 700;
     line-height: 67.2px;

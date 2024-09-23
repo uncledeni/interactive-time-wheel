@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './app/app.jsx';
+import './shared/fonts/fonts.css';
 
 import { createGlobalStyle } from 'styled-components';
 

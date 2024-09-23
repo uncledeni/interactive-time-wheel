@@ -1,0 +1,13 @@
+@font-face {
+    src: url(./BebasNeue-Regular.ttf) format('woff2');
+    font-family: 'Bebas Neue';
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    src: url(./PTSans-Regular.ttf) format('woff2');
+    font-family: 'PT Sans';
+    font-weight: 400;
+    font-display: swap;
+}

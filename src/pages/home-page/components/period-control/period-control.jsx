@@ -15,12 +15,12 @@ const PeriodCircle = styled.div`
     align-items: center;
 `
 
-// font-family: PT Sans;
 const YearsPeriod = styled.p`
     position: absolute;
     width: max-content;
     height: 160px;
 
+    font-family: PT Sans;
     font-size: 200px;
     font-weight: 700;
     line-height: 160px;

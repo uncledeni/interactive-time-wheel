@@ -8,6 +8,7 @@ import { testData } from '../../shared/utils/data';
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/navigation';
+import './styles.css'
 
 import { Event } from './components/event/event.jsx';
 
