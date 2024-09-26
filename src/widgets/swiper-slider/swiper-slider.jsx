@@ -14,7 +14,7 @@ import { Event } from './components/event/event.jsx';
 
 // import required modules
 
-export function SwiperSlider() {
+export function SwiperSlider( {data} ) {
   return (
     <>
       <Swiper
@@ -33,7 +33,7 @@ export function SwiperSlider() {
           }
           `]}
       >
-        {testData.map((event) => {
+        {data.map((event) => {
           return (
             <SwiperSlide key={event.id}>
               <Event year={event.year} eventText={event.eventText} />

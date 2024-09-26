@@ -3,11 +3,13 @@ import styled from "styled-components";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
-const numIcons = [1, 2, 3, 4, 5, 6];
 
-const PeriodCircle = styled.div`
-    width: 530px;
-    height: 530px;
+const circleRadius = 265;
+const scaleChange = 1.5;
+
+const SC_PeriodCircle = styled.div`
+    width: ${circleRadius * 2}px;
+    height: ${circleRadius * 2}px;
     position: absolute;
     top: 19%;
     left: calc(50% - 265px);
@@ -19,7 +21,7 @@ const PeriodCircle = styled.div`
     align-items: center;
 `
 
-const YearsPeriod = styled.p`
+const SC_YearsPeriod = styled.p`
     position: absolute;
     width: max-content;
     height: 160px;
@@ -32,7 +34,18 @@ const YearsPeriod = styled.p`
     text-align: center;
 `
 
-const TimePoint = styled.button`
+// ${props => {
+//     return `
+//         // transform: ${(props.$tmp !== props.$currentActive)
+//             ?
+//             `scale(${1/ scaleChange}) translate(-50%, -50%) rotate(calc(${360 / numIcons.length}deg * var(--i))) translate(${circleRadius * scaleChange}px) rotate(calc(${-360 / numIcons.length}deg * var(--i)));`
+//             :
+//             `scale(${scaleChange}) translate(-50%, -50%) rotate(calc(${360 / numIcons.length}deg * var(--i))) translate(${circleRadius / scaleChange}px) rotate(calc(${-360 / numIcons.length}deg * var(--i)))`
+//         } 
+//     `
+// }}
+
+const SC_TimePoint = styled.button`
     display: flex;
     justify-content: center;
     align-items: center;
@@ -43,24 +56,36 @@ const TimePoint = styled.button`
     cursor: pointer;
     transform-origin: 0 0;
     // scale: .2;
-    transform: translate(-50%, -50%) rotate(calc(${360 / numIcons.length}deg * var(--i))) translate(265px) rotate(calc(${-360 / numIcons.length}deg * var(--i)));
+    background-color: #555f;
+
+    ${props => {
+        return `transform: scale(${1 / scaleChange}) translate(-50%, -50%) rotate(calc(${360 / props.$numIcons.length}deg * var(--i))) translate(${circleRadius * scaleChange}px) rotate(calc(${-360 / props.$numIcons.length}deg * var(--i)));`
+    }}
+    
 
     ${props => {
         return `&:nth-child(${props.$tmp + 1}) { --i: ${props.$tmp - 1};}`
     }}
-    
+
+    &:hover {
+        ${props => {
+        return `transform: scale(${scaleChange}) translate(-50%, -50%) rotate(calc(${360 / props.$numIcons.length}deg * var(--i))) translate(${circleRadius / scaleChange}px) rotate(calc(${-360 / props.$numIcons.length}deg * var(--i)));`
+    }}
+        background-color: revert;
+    }
+
     & p {
         font-family: PT Sans;
         color: red;
-    }
+        }
 
-    &: {
-
+        & p:hover {
+            color: green;
     }
 `
 const InnerText = ({ e, i, activePosition, currentActive }) => {
     const textRef = useRef(null);
-    console.log(textRef.current, i, activePosition - i)
+    // console.log(textRef.current, i, activePosition - i)
 
     gsap.to(textRef.current, {
         duration: 2,
@@ -73,56 +98,105 @@ const InnerText = ({ e, i, activePosition, currentActive }) => {
     )
 }
 
-const Point = ({ e, i, offset, currentActive, activePosition, func }) => {
+const Point = ({ e, i, offset, currentActive, activePosition, func, numIcons }) => {
     const elemRef = useRef(null);
 
-    gsap.to(elemRef.current, {
-        duration: 2,
-        // repeat: -1,
-        // scale: 5.6,
-        // xPercent: 25,
-        // yPercent: 25
-    })
+    // if (i === currentActive) {
+    //     // setTimeout(() => {
+    //     gsap.to(elemRef.current, {
+    //         duration: 2,
+    //         // repeat: -1,
+    //         // scale: scaleChange,
+    //         // x: circleRadius / scaleChange,
+    //         // y: circleRadius / scaleChange
+    //         // xPercent: 25,
+    //         // yPercent: 25
+    //     })
+    //     // }, 2000)
+    // } else {
+    //     gsap.to(elemRef.current, {
+    //         duration: 2,
+    //         // repeat: -1,
+    //         scale: 1 / scaleChange,
+    //         // x: circleRadius / scaleChange,
+    //         // y: circleRadius / scaleChange
+    //         // xPercent: 25,
+    //         // yPercent: 25
+    //     })
+    // }
 
     return (
-        <TimePoint
-        ref={elemRef}
+        <SC_TimePoint
+            ref={elemRef}
             $tmp={i}
             $offset={offset}
+            $currentActive={currentActive}
             onClick={func}
+            $numIcons={numIcons}
         >
             <InnerText e={e} i={i} activePosition={activePosition} currentActive={currentActive} />
-        </TimePoint>
+        </SC_TimePoint>
     )
 }
 
-export const PeriodControl = ({ years }) => {
+export const PeriodControl = ({ data, setPer }) => {
+    const [numIcons, setNumIcons] = useState(data);
+
+
     const circleRef = useRef(null);
     const [activePosition, setActivePosition] = useState(numIcons.length - 1);
     const [currentActive, setCurrentActive] = useState(0);
     const [offset, setOffset] = useState(0);
 
     useEffect(() => {
-        // alert(offset)
-    }, [offset])
+        setPer(currentActive)
+    }, [currentActive]);
 
+    // useEffect(() => {
+    // console.log(circleRef.current.style.transform)
+    // }, [circleRef, activePosition, currentActive])
 
     return (
-        <PeriodCircle ref={circleRef}>
-            {numIcons.map((e, i) => {
-                return <Point key={e} e={e} i={i} activePosition={activePosition} currentActive={currentActive} func={() => {
+        <>
+            {/* <div>
+                <button onClick={() => {
+                    setOffset(Math.abs(activePosition - currentActive - 1 + 1));
+                    setCurrentActive(currentActive - 1);
+                    gsap.to(circleRef.current, {
+                        duration: 2,
+                        // repeat: -1,
+                        rotation: 60 * Math.abs(activePosition - currentActive - 1 + 1)
+                    })
+                }}>L</button>
+                <button onClick={() => {
+                    setOffset(Math.abs(activePosition - currentActive + 1 + 1));
+                    setCurrentActive(currentActive + 1);
+                    gsap.to(circleRef.current, {
+                        duration: 2,
+                        // repeat: -1,
+                        rotation: 60 * Math.abs(activePosition - currentActive + 1 + 1)
+                    })
+                }
+                }>R</button>
+            </div> */}
+            <SC_PeriodCircle ref={circleRef}>
+                {numIcons.map((e, i) => {
+                    return <Point key={i} e={i} i={i} activePosition={activePosition} currentActive={currentActive} numIcons={numIcons} func={() => {
                         if (i !== currentActive) {
-                            setOffset(Math.abs(activePosition - i + 1));
+                            setOffset(Math.abs(activePosition - i) + 1);
+
+                            // console.log(activePosition, currentActive, (Math.abs(activePosition - i) + 1));
                             setCurrentActive(i);
                             gsap.to(circleRef.current, {
                                 duration: 2,
                                 // repeat: -1,
-                                rotation: 60 * (activePosition - i + 1)
+                                rotation: 60 * (Math.abs(activePosition - i) + 1)
                             })
                         }
                     }} />
-            })}
-            {/* <YearsPeriod>{`${years[0]} ${years[1]}`}</YearsPeriod> */}
-        </PeriodCircle>
+                })}
+            </SC_PeriodCircle>
+            <SC_YearsPeriod>{`${numIcons[currentActive].years[0]} ${numIcons[currentActive].years[1]}`}</SC_YearsPeriod>
+        </>
     )
 }

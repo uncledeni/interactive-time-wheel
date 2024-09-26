@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { SwiperSlider } from "../../widgets/swiper-slider/swiper-slider.jsx";
 
 import { PageTitle } from "../../shared/components/page-title/page-title.jsx";
 import { PeriodControl } from "./components/period-control/period-control.jsx";
+import { testData } from "../../shared/utils/data.js";
 
 const PageWrapper = styled.div`
     display: flex;
@@ -32,14 +33,17 @@ const SwiperWrapper = styled.div`
 
 export const HomePage = () => {
     const title = 'Исторические даты';
+    const [per, setPer] = useState(0)
+
+
 
     return (
         <PageWrapper>
             <PageContent>
-                <PageTitle title={title}/>
-                <PeriodControl years={[2015, 2022]}/>
+                <PageTitle title={title} />
+                <PeriodControl data={testData} setPer={setPer} />
                 <SwiperWrapper>
-                    <SwiperSlider />
+                    <SwiperSlider data={testData[per].data} />
                 </SwiperWrapper>
             </PageContent>
         </PageWrapper>
