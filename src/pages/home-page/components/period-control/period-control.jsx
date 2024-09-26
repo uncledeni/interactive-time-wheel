@@ -7,43 +7,44 @@ import { useGSAP } from "@gsap/react";
 const circleRadius = 265;
 const scaleChange = 1.5;
 
-const SC_PeriodCircle = styled.div`
-    width: ${circleRadius * 2}px;
-    height: ${circleRadius * 2}px;
-    position: absolute;
-    top: 19%;
-    left: calc(50% - 265px);
-    border: 1px solid #42567A1A;
-    box-sizing: border-box;
-    border-radius: 1000px;
+const SC_CircleWrapper = styled.div`
+    width: 100%;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
 `
 
+const SC_PeriodCircle = styled.div`
+    width: ${circleRadius * 2}px;
+    height: ${circleRadius * 2}px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #42567A1A;
+    border-radius: 1000px;
+    box-sizing: border-box;
+    z-index: 1;
+`
+
 const SC_YearsPeriod = styled.p`
     position: absolute;
-    width: max-content;
-    height: 160px;
-
     font-family: PT Sans;
     font-size: 200px;
     font-weight: 700;
     line-height: 160px;
     letter-spacing: -0.02em;
-    text-align: center;
+    z-index: 0;
+    ${props => {
+        return `color: ${props.color}`
+    }}
 `
 
-// ${props => {
-//     return `
-//         // transform: ${(props.$tmp !== props.$currentActive)
-//             ?
-//             `scale(${1/ scaleChange}) translate(-50%, -50%) rotate(calc(${360 / numIcons.length}deg * var(--i))) translate(${circleRadius * scaleChange}px) rotate(calc(${-360 / numIcons.length}deg * var(--i)));`
-//             :
-//             `scale(${scaleChange}) translate(-50%, -50%) rotate(calc(${360 / numIcons.length}deg * var(--i))) translate(${circleRadius / scaleChange}px) rotate(calc(${-360 / numIcons.length}deg * var(--i)))`
-//         } 
-//     `
-// }}
+const SC_OtherPeriod = styled.span`
+    ${props => {
+        return `color: ${props.color}`
+    }}
+`
 
 const SC_TimePoint = styled.button`
     display: flex;
@@ -55,7 +56,6 @@ const SC_TimePoint = styled.button`
     position: absolute; top: 50%; left: 50%;
     cursor: pointer;
     transform-origin: 0 0;
-    // scale: .2;
     background-color: #555f;
 
     ${props => {
@@ -157,7 +157,7 @@ export const PeriodControl = ({ data, setPer }) => {
     // }, [circleRef, activePosition, currentActive])
 
     return (
-        <>
+        <SC_CircleWrapper>
             {/* <div>
                 <button onClick={() => {
                     setOffset(Math.abs(activePosition - currentActive - 1 + 1));
@@ -179,13 +179,13 @@ export const PeriodControl = ({ data, setPer }) => {
                 }
                 }>R</button>
             </div> */}
+
             <SC_PeriodCircle ref={circleRef}>
                 {numIcons.map((e, i) => {
                     return <Point key={i} e={i} i={i} activePosition={activePosition} currentActive={currentActive} numIcons={numIcons} func={() => {
                         if (i !== currentActive) {
                             setOffset(Math.abs(activePosition - i) + 1);
 
-                            // console.log(activePosition, currentActive, (Math.abs(activePosition - i) + 1));
                             setCurrentActive(i);
                             gsap.to(circleRef.current, {
                                 duration: 2,
@@ -196,7 +196,7 @@ export const PeriodControl = ({ data, setPer }) => {
                     }} />
                 })}
             </SC_PeriodCircle>
-            <SC_YearsPeriod>{`${numIcons[currentActive].years[0]} ${numIcons[currentActive].years[1]}`}</SC_YearsPeriod>
-        </>
+            <SC_YearsPeriod color="#3877EE">{`${numIcons[currentActive].years[0]}`} <SC_OtherPeriod color='#EE7738'>{`${numIcons[currentActive].years[1]}`}</SC_OtherPeriod></SC_YearsPeriod>
+        </SC_CircleWrapper>
     )
 }

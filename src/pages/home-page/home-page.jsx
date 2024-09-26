@@ -35,8 +35,6 @@ export const HomePage = () => {
     const title = 'Исторические даты';
     const [per, setPer] = useState(0)
 
-
-
     return (
         <PageWrapper>
             <PageContent>
