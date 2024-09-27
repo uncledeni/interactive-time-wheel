@@ -141,16 +141,43 @@ const Point = ({ e, i, offset, currentActive, activePosition, func, numIcons }) 
 
 export const PeriodControl = ({ data, setPer }) => {
     const [numIcons, setNumIcons] = useState(data);
-
-
     const circleRef = useRef(null);
     const [activePosition, setActivePosition] = useState(numIcons.length - 1);
     const [currentActive, setCurrentActive] = useState(0);
     const [offset, setOffset] = useState(0);
+    const [currentYears, setCurrentYears] = useState(numIcons[currentActive].years)
+    const [val, setVal] = useState(0);
+    const tmpId = useRef(null);
+
+    function animateValue(start, end, duration) {
+        if (start === end) return;
+        var range = end - start;
+        var current = start;
+        console.log(start, end, current)
+        var increment = end > start ? 1 : -1;
+        var stepTime = Math.abs(Math.floor(duration / range));
+        // var timer = setInterval(function () {
+        //     current += increment;
+            setVal(current)
+        //     if (current == end) {
+        //         clearInterval(timer);
+        //     }
+        // }, stepTime);
+    }
+
+
 
     useEffect(() => {
-        setPer(currentActive)
+        setPer(currentActive);
     }, [currentActive]);
+
+    useEffect(() => {
+        console.log(currentYears[0]);
+        animateValue(currentYears[1], numIcons[currentActive].years[0], 2000);
+
+        // setCurrentYears([numIcons[currentActive].years[0], numIcons[currentActive].years[1]])
+    }, []);
+
 
     // useEffect(() => {
     // console.log(circleRef.current.style.transform)
@@ -180,6 +207,7 @@ export const PeriodControl = ({ data, setPer }) => {
                 }>R</button>
             </div> */}
 
+            <div ref={tmpId}>{val}</div>
             <SC_PeriodCircle ref={circleRef}>
                 {numIcons.map((e, i) => {
                     return <Point key={i} e={i} i={i} activePosition={activePosition} currentActive={currentActive} numIcons={numIcons} func={() => {
@@ -196,7 +224,7 @@ export const PeriodControl = ({ data, setPer }) => {
                     }} />
                 })}
             </SC_PeriodCircle>
-            <SC_YearsPeriod color="#3877EE">{`${numIcons[currentActive].years[0]}`} <SC_OtherPeriod color='#EE7738'>{`${numIcons[currentActive].years[1]}`}</SC_OtherPeriod></SC_YearsPeriod>
+            <SC_YearsPeriod color="#3877EE">{`${val}`} <SC_OtherPeriod color='#EE7738'>{`${numIcons[currentActive].years[1]}`}</SC_OtherPeriod></SC_YearsPeriod>
         </SC_CircleWrapper>
     )
 }
