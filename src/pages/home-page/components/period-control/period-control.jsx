@@ -3,7 +3,6 @@ import styled from "styled-components";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
-
 const circleRadius = 265;
 const scaleChange = 1.5;
 
@@ -46,6 +45,21 @@ const SC_OtherPeriod = styled.span`
     }}
 `
 
+const SC_NestSpan = styled.span`
+    position: absolute;
+    width: 10px; height: 10px;
+    border: 1px solid #303E5880;
+    transform-origin: 0 0;
+
+    ${props => {
+        return `transform: rotate(calc(${360 / props.$numIcons.length}deg * var(--i))) translate(${circleRadius}px) rotate(calc(${-360 / props.$numIcons.length}deg * var(--i)));`
+    }}
+
+    ${props => {
+        return `&:nth-child(${props.$i + 1}) { --i: ${props.$i - 1};}`
+    }}
+    `
+
 const SC_TimePoint = styled.button`
     display: flex;
     justify-content: center;
@@ -53,42 +67,57 @@ const SC_TimePoint = styled.button`
     width: 56px; height: 56px;
     border: 1px solid #303E5880;
     border-radius: 28px;
-    position: absolute; top: 50%; left: 50%;
+    position: absolute;
+    top: -28px; left: -28px;
     cursor: pointer;
-    transform-origin: 0 0;
+    // transform-origin: 0 0;
     background-color: #555f;
-
-    ${props => {
-        return `transform: scale(${1 / scaleChange}) translate(-50%, -50%) rotate(calc(${360 / props.$numIcons.length}deg * var(--i))) translate(${circleRadius * scaleChange}px) rotate(calc(${-360 / props.$numIcons.length}deg * var(--i)));`
-    }}
-    
-
-    ${props => {
-        return `&:nth-child(${props.$tmp + 1}) { --i: ${props.$tmp - 1};}`
-    }}
-
-    &:hover {
-        ${props => {
-        return `transform: scale(${scaleChange}) translate(-50%, -50%) rotate(calc(${360 / props.$numIcons.length}deg * var(--i))) translate(${circleRadius / scaleChange}px) rotate(calc(${-360 / props.$numIcons.length}deg * var(--i)));`
-    }}
-        background-color: revert;
-    }
 
     & p {
         font-family: PT Sans;
         color: red;
-        }
-
-        & p:hover {
-            color: green;
+        ${props => {
+            return `display: ${(props.$i === props.$currentActive) ? 'block' : 'none'}`
+        }}
+    }
+   
+    & p:hover {
+        color: green;
     }
 `
+
+// &:hover {
+//     ${props => {
+//     return `transform: scale(${scaleChange});`
+// }}
+//     background-color: revert;
+// }
+
+// ${props => {
+//     return `transform: scale(${1 / scaleChange});`
+// }}
+
+function animateValue(start, end, fnc, duration) {
+    if (start === end) return;
+    var range = end - start;
+    var current = start;
+    var increment = end > start ? 1 : -1;
+    var stepTime = Math.abs(Math.floor(duration / range));
+    // console.log(current, end, range, increment, stepTime);
+    var timer = setInterval(function () {
+        current += increment;
+        fnc(current)
+        if (current == end) {
+            clearInterval(timer);
+        }
+    }, stepTime);
+}
+
 const InnerText = ({ e, i, activePosition, currentActive }) => {
     const textRef = useRef(null);
-    // console.log(textRef.current, i, activePosition - i)
 
     gsap.to(textRef.current, {
-        duration: 2,
+        duration: 0,
         // repeat: -1,
         rotation: -60 * (activePosition - currentActive + 1),
     })
@@ -98,8 +127,26 @@ const InnerText = ({ e, i, activePosition, currentActive }) => {
     )
 }
 
-const Point = ({ e, i, offset, currentActive, activePosition, func, numIcons }) => {
+const Point = ({ e, i, currentActive, activePosition, func, numIcons }) => {
     const elemRef = useRef(null);
+
+    useEffect(() => {
+        if (currentActive === i) {
+            gsap.to(elemRef.current, {
+                scale: scaleChange
+                // duration: 0,
+                // // repeat: -1,
+                // rotation: -60 * (activePosition - currentActive + 1),
+            })
+        } else {
+            gsap.to(elemRef.current, {
+                scale: (1 / scaleChange)
+                // duration: 0,
+                // // repeat: -1,
+                // rotation: -60 * (activePosition - currentActive + 1),
+            })
+        }
+    }, [currentActive])
 
     // if (i === currentActive) {
     //     // setTimeout(() => {
@@ -126,16 +173,23 @@ const Point = ({ e, i, offset, currentActive, activePosition, func, numIcons }) 
     // }
 
     return (
-        <SC_TimePoint
+        <SC_NestSpan
             ref={elemRef}
-            $tmp={i}
-            $offset={offset}
+            $i={i}
             $currentActive={currentActive}
             onClick={func}
             $numIcons={numIcons}
         >
-            <InnerText e={e} i={i} activePosition={activePosition} currentActive={currentActive} />
-        </SC_TimePoint>
+            <SC_TimePoint
+                ref={elemRef}
+                $i={i}
+                $currentActive={currentActive}
+                onClick={func}
+                $numIcons={numIcons}
+            >
+                <InnerText e={e} i={i} activePosition={activePosition} currentActive={currentActive} />
+            </SC_TimePoint>
+        </SC_NestSpan>
     )
 }
 
@@ -144,51 +198,34 @@ export const PeriodControl = ({ data, setPer }) => {
     const circleRef = useRef(null);
     const [activePosition, setActivePosition] = useState(numIcons.length - 1);
     const [currentActive, setCurrentActive] = useState(0);
-    const [offset, setOffset] = useState(0);
     const [currentYears, setCurrentYears] = useState(numIcons[currentActive].years)
-    const [val, setVal] = useState(0);
-    const tmpId = useRef(null);
-
-    function animateValue(start, end, duration) {
-        if (start === end) return;
-        var range = end - start;
-        var current = start;
-        console.log(start, end, current)
-        var increment = end > start ? 1 : -1;
-        var stepTime = Math.abs(Math.floor(duration / range));
-        // var timer = setInterval(function () {
-        //     current += increment;
-            setVal(current)
-        //     if (current == end) {
-        //         clearInterval(timer);
-        //     }
-        // }, stepTime);
-    }
-
-
+    const [val, setVal] = useState(numIcons[currentActive].years[0]);
+    const [val1, setVal1] = useState(numIcons[currentActive].years[1]);
 
     useEffect(() => {
         setPer(currentActive);
+        console.log(currentActive);
     }, [currentActive]);
 
     useEffect(() => {
-        console.log(currentYears[0]);
-        animateValue(currentYears[1], numIcons[currentActive].years[0], 2000);
+        // console.log(currentYears, numIcons[currentActive].years);
+        animateValue(currentYears[0], numIcons[currentActive].years[0], setVal, 2000);
+        animateValue(currentYears[1], numIcons[currentActive].years[1], setVal1, 2000);
 
-        // setCurrentYears([numIcons[currentActive].years[0], numIcons[currentActive].years[1]])
-    }, []);
-
-
-    // useEffect(() => {
-    // console.log(circleRef.current.style.transform)
-    // }, [circleRef, activePosition, currentActive])
+        setCurrentYears([numIcons[currentActive].years[0], numIcons[currentActive].years[1]])
+    }, [currentActive]);
 
     return (
-        <SC_CircleWrapper>
-            {/* <div>
+        <>
+            <div>
                 <button onClick={() => {
-                    setOffset(Math.abs(activePosition - currentActive - 1 + 1));
-                    setCurrentActive(currentActive - 1);
+                    // setOffset(Math.abs(activePosition - currentActive - 1 + 1));
+                    setCurrentActive(() => {
+                        if (currentActive - 1 < 0) {
+                            return 5;
+                        }
+                        return currentActive - 1;
+                    });
                     gsap.to(circleRef.current, {
                         duration: 2,
                         // repeat: -1,
@@ -196,8 +233,13 @@ export const PeriodControl = ({ data, setPer }) => {
                     })
                 }}>L</button>
                 <button onClick={() => {
-                    setOffset(Math.abs(activePosition - currentActive + 1 + 1));
-                    setCurrentActive(currentActive + 1);
+                    // setOffset(Math.abs(activePosition - currentActive + 1 + 1));
+                    setCurrentActive(() => {
+                        if (currentActive + 1 > 5) {
+                            return 0;
+                        }
+                        return currentActive + 1;
+                    });
                     gsap.to(circleRef.current, {
                         duration: 2,
                         // repeat: -1,
@@ -205,26 +247,24 @@ export const PeriodControl = ({ data, setPer }) => {
                     })
                 }
                 }>R</button>
-            </div> */}
-
-            <div ref={tmpId}>{val}</div>
-            <SC_PeriodCircle ref={circleRef}>
-                {numIcons.map((e, i) => {
-                    return <Point key={i} e={i} i={i} activePosition={activePosition} currentActive={currentActive} numIcons={numIcons} func={() => {
-                        if (i !== currentActive) {
-                            setOffset(Math.abs(activePosition - i) + 1);
-
-                            setCurrentActive(i);
-                            gsap.to(circleRef.current, {
-                                duration: 2,
-                                // repeat: -1,
-                                rotation: 60 * (Math.abs(activePosition - i) + 1)
-                            })
-                        }
-                    }} />
-                })}
-            </SC_PeriodCircle>
-            <SC_YearsPeriod color="#3877EE">{`${val}`} <SC_OtherPeriod color='#EE7738'>{`${numIcons[currentActive].years[1]}`}</SC_OtherPeriod></SC_YearsPeriod>
-        </SC_CircleWrapper>
+            </div>
+            <SC_CircleWrapper>
+                <SC_PeriodCircle ref={circleRef}>
+                    {numIcons.map((e, i) => {
+                        return <Point key={i} e={i} i={i} activePosition={activePosition} currentActive={currentActive} numIcons={numIcons} func={() => {
+                            if (i !== currentActive) {
+                                setCurrentActive(i);
+                                gsap.to(circleRef.current, {
+                                    duration: 2,
+                                    // repeat: -1,
+                                    rotation: 60 * (Math.abs(activePosition - i) + 1)
+                                })
+                            }
+                        }} />
+                    })}
+                </SC_PeriodCircle>
+                <SC_YearsPeriod color="#3877EE">{`${val}`} <SC_OtherPeriod color='#EE7738'>{`${val1}`}</SC_OtherPeriod></SC_YearsPeriod>
+            </SC_CircleWrapper>
+        </>
     )
 }

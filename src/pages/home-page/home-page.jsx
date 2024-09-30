@@ -16,7 +16,7 @@ const PageWrapper = styled.div`
 
 const PageContent = styled.div`
     width: 1440px;
-    height: 100vh;
+    height: 100%;
     position: relative;
     border: 1px solid #42567A1A;
     box-sizing: border-box;
