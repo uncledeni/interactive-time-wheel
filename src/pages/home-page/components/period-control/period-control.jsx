@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { Observer } from "gsap/all";
 
 const circleRadius = 265;
 const scaleChange = 1.5;
@@ -76,9 +77,6 @@ const SC_TimePoint = styled.button`
     & p {
         font-family: PT Sans;
         color: red;
-        ${props => {
-            return `display: ${(props.$i === props.$currentActive) ? 'block' : 'none'}`
-        }}
     }
    
     & p:hover {
@@ -113,22 +111,74 @@ function animateValue(start, end, fnc, duration) {
     }, stepTime);
 }
 
-const InnerText = ({ e, i, activePosition, currentActive }) => {
-    const textRef = useRef(null);
-
-    gsap.to(textRef.current, {
+const InnerText = ({ e, i, activePosition, currentActive, textSubRef }) => {
+    gsap.to(textSubRef.current, {
         duration: 0,
         // repeat: -1,
         rotation: -60 * (activePosition - currentActive + 1),
     })
 
     return (
-        <p ref={textRef}>{i} - {e}</p>
+        <p ref={textSubRef}>{i} - {e}</p>
     )
 }
 
 const Point = ({ e, i, currentActive, activePosition, func, numIcons }) => {
     const elemRef = useRef(null);
+    const textSubRef = useRef(null);
+    gsap.registerPlugin(Observer);
+
+    //инициализация
+    useEffect(() => {
+        if (currentActive !== i) {
+            gsap.to(elemRef.current, { scale: 1 / scaleChange });
+            gsap.to(textSubRef.current, { display: "none", color: "white" });
+        } else {
+            gsap.to(elemRef.current, { scale: scaleChange });
+            gsap.to(textSubRef.current, { color: "blue", display: "block" });
+        }
+    }, [])
+
+    //обновление
+    useEffect(() => {
+        console.log(e, i, currentActive, activePosition)
+
+        Observer.create({
+            target: elemRef.current,
+            type: "pointer",
+            wheelSpeed: -1,
+            onHover: () => {
+                console.log(currentActive, i);
+            },
+            tolerance: 10,
+            preventDefault: true
+        });
+
+        // console.log(elemRef.current)
+        if (currentActive !== i) {
+
+            Observer.create({
+                target: elemRef.current,
+                type: "pointer",
+                wheelSpeed: -1,
+                onHover: () => {
+                    // console.log(currentActive, i);
+                    gsap.to(elemRef.current, { scale: scaleChange });
+                    gsap.to(textSubRef.current, { color: "orange", display: "block" });
+                },
+                onHoverEnd: () => {
+                    gsap.to(elemRef.current, { scale: 1 / scaleChange });
+                    gsap.to(textSubRef.current, { color: "white", display: "none" });
+                },
+                tolerance: 10,
+                preventDefault: true
+            });
+        } else {
+            gsap.to(elemRef.current, {
+                scale: scaleChange
+            })
+        }
+    }, [currentActive])
 
     useEffect(() => {
         if (currentActive === i) {
@@ -140,41 +190,16 @@ const Point = ({ e, i, currentActive, activePosition, func, numIcons }) => {
             })
         } else {
             gsap.to(elemRef.current, {
-                scale: (1 / scaleChange)
+                scale: 1 / scaleChange
                 // duration: 0,
                 // // repeat: -1,
                 // rotation: -60 * (activePosition - currentActive + 1),
             })
         }
-    }, [currentActive])
-
-    // if (i === currentActive) {
-    //     // setTimeout(() => {
-    //     gsap.to(elemRef.current, {
-    //         duration: 2,
-    //         // repeat: -1,
-    //         // scale: scaleChange,
-    //         // x: circleRadius / scaleChange,
-    //         // y: circleRadius / scaleChange
-    //         // xPercent: 25,
-    //         // yPercent: 25
-    //     })
-    //     // }, 2000)
-    // } else {
-    //     gsap.to(elemRef.current, {
-    //         duration: 2,
-    //         // repeat: -1,
-    //         scale: 1 / scaleChange,
-    //         // x: circleRadius / scaleChange,
-    //         // y: circleRadius / scaleChange
-    //         // xPercent: 25,
-    //         // yPercent: 25
-    //     })
-    // }
+    }, [elemRef, currentActive])
 
     return (
         <SC_NestSpan
-            ref={elemRef}
             $i={i}
             $currentActive={currentActive}
             onClick={func}
@@ -187,7 +212,7 @@ const Point = ({ e, i, currentActive, activePosition, func, numIcons }) => {
                 onClick={func}
                 $numIcons={numIcons}
             >
-                <InnerText e={e} i={i} activePosition={activePosition} currentActive={currentActive} />
+                <InnerText e={e} i={i} activePosition={activePosition} currentActive={currentActive} textSubRef={textSubRef} />
             </SC_TimePoint>
         </SC_NestSpan>
     )
@@ -201,10 +226,11 @@ export const PeriodControl = ({ data, setPer }) => {
     const [currentYears, setCurrentYears] = useState(numIcons[currentActive].years)
     const [val, setVal] = useState(numIcons[currentActive].years[0]);
     const [val1, setVal1] = useState(numIcons[currentActive].years[1]);
+    const [tmp, setTmp] = useState(0);
 
     useEffect(() => {
         setPer(currentActive);
-        console.log(currentActive);
+        // console.log(currentActive);
     }, [currentActive]);
 
     useEffect(() => {
@@ -217,6 +243,7 @@ export const PeriodControl = ({ data, setPer }) => {
 
     return (
         <>
+            <button onClick={() => setTmp(tmp + 1)}>CLICK {tmp}</button>
             <div>
                 <button onClick={() => {
                     // setOffset(Math.abs(activePosition - currentActive - 1 + 1));
@@ -226,11 +253,11 @@ export const PeriodControl = ({ data, setPer }) => {
                         }
                         return currentActive - 1;
                     });
-                    gsap.to(circleRef.current, {
-                        duration: 2,
-                        // repeat: -1,
-                        rotation: 60 * Math.abs(activePosition - currentActive - 1 + 1)
-                    })
+                    // gsap.to(circleRef.current, {
+                    //     duration: 2,
+                    //     // repeat: -1,
+                    //     rotation: 60 * Math.abs(activePosition - currentActive - 1 + 1)
+                    // })
                 }}>L</button>
                 <button onClick={() => {
                     // setOffset(Math.abs(activePosition - currentActive + 1 + 1));
@@ -240,11 +267,11 @@ export const PeriodControl = ({ data, setPer }) => {
                         }
                         return currentActive + 1;
                     });
-                    gsap.to(circleRef.current, {
-                        duration: 2,
-                        // repeat: -1,
-                        rotation: 60 * Math.abs(activePosition - currentActive + 1 + 1)
-                    })
+                    // gsap.to(circleRef.current, {
+                    //     duration: 2,
+                    //     // repeat: -1,
+                    //     rotation: 60 * Math.abs(activePosition - currentActive + 1 + 1)
+                    // })
                 }
                 }>R</button>
             </div>
@@ -254,6 +281,7 @@ export const PeriodControl = ({ data, setPer }) => {
                         return <Point key={i} e={i} i={i} activePosition={activePosition} currentActive={currentActive} numIcons={numIcons} func={() => {
                             if (i !== currentActive) {
                                 setCurrentActive(i);
+                                console.log(currentActive)
                                 gsap.to(circleRef.current, {
                                     duration: 2,
                                     // repeat: -1,
